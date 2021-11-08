@@ -1,30 +1,28 @@
-#include <iostream>
-#include <fstream>
+#include <stdio.h>
 #include <vector>
 #include "../include/main.h"
 
-std::string get_string(int pos, const std::vector<unsigned char>& buffer)
+const char* get_string(int pos, const std::vector<unsigned char>& buffer)
 {
 	int length = 0;
 	size_t size = buffer.size();
 
 	for (size_t j = pos + STR_START; j < size; j++)
-		if (&buffer[j] != STR_END)
+		if (buffer[j] != STR_END)
 			length++;
 
-	return std::string(buffer.begin() + pos + 1, buffer.begin() + pos + length);
+	return (const char*)(buffer.data() + pos + 1);
 }
 
 int main(int argc, char* argv[])
 {
 	std::vector<Variable> variables;
-	std::vector<String> strings;
 	//std::vector<unsigned char> buffer = { 0x13, 0x37, ADD_RANDOM, 0x31, PRT_STR, 0x74, 0x6A, 0x6F, 0x20, 0x67, 0x72, 0x61, 0x62, 0x62, 0x61, 0x72, STR_END, ADD_RANDOM, 0x1A };
-	std::vector<unsigned char> buffer = { 
-		0x13, 0x37, 
+	std::vector<unsigned char> buffer = {
+		0x13, 0x37,
 		INT, 0x10, 0x23,
-		BOOL, 0x11, 0x1, 
-		STR, 0x12, STR_START, 0x6A, 0x20, 0x72, STR_END, 
+		BOOL, 0x11, 0x1,
+		STR, 0x12, STR_START, 0x6A, 0x20, 0x72, STR_END,
 		PRT, STR_START, 0x74, 0x6A, 0x6F, 0x20, 0x67, 0x72, 0x61, 0x62, 0x62, 0x61, 0x72, STR_END,
 		PRT, 0x10
 	};
@@ -38,13 +36,18 @@ int main(int argc, char* argv[])
 	{
 		switch (buffer[i])
 		{
-		case INT: variables.push_back(Variable{ INT, buffer[i + 1], buffer[i + 2] });
+		case INT:
+			variables.push_back(Variable{ INT, buffer[i + 1], "", buffer[i + 2]});
 			i += 2;
 			break;
-		case BOOL: variables.push_back(Variable{ BOOL, buffer[i + 1], buffer[i + 2] });
+		case BOOL:
+			variables.push_back(Variable{ BOOL, buffer[i + 1], "", buffer[i + 2]});
 			i += 2;
 			break;
-		case STR: strings.push_back(String{ STR, buffer[i + 1], get_string(i + 2, buffer) }); break;
+		case STR:
+
+			variables.push_back(Variable{ STR, buffer[i + 1], get_string(i + 2, buffer) }); 
+			break;
 
 		case ADD: // ADD INT variable, INT value
 		{
@@ -53,9 +56,9 @@ int main(int argc, char* argv[])
 
 			for (size_t i = 0; i < variables.size(); i++)
 			{
-				if (variables[i].Name == name)
+				if (variables[i].name == name)
 				{
-					variables[i].Value += value;
+					variables[i].value += value;
 					break;
 				}
 			}
@@ -70,9 +73,9 @@ int main(int argc, char* argv[])
 
 			for (size_t i = 0; i < variables.size(); i++)
 			{
-				if (variables[i].Name == name)
+				if (variables[i].name == name)
 				{
-					variables[i].Value -= value;
+					variables[i].value -= value;
 					break;
 				}
 			}
@@ -90,7 +93,7 @@ int main(int argc, char* argv[])
 			}
 			else
 			{
-				printf("%x\n", buffer[i+1]);
+				printf("%x\n", buffer[i + 1]);
 				i += 2;
 			}
 			break;

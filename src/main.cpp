@@ -1,14 +1,13 @@
-#include <stdio.h>
-#include <vector>
 #include "../include/main.h"
+#include <stdio.h>
 
 const char* get_string(int pos, const std::vector<unsigned char>& buffer)
 {
 	int length = 0;
 	size_t size = buffer.size();
 
-	for (size_t j = pos + STR_START; j < size; j++)
-		if (buffer[j] != STR_END)
+	for (size_t j = pos; j < size; j++)
+		if (buffer[j] != 0x00)
 			length++;
 
 	return (const char*)(buffer.data() + pos + 1);
@@ -17,37 +16,44 @@ const char* get_string(int pos, const std::vector<unsigned char>& buffer)
 int main(int argc, char* argv[])
 {
 	std::vector<Variable> variables;
-	//std::vector<unsigned char> buffer = { 0x13, 0x37, ADD_RANDOM, 0x31, PRT_STR, 0x74, 0x6A, 0x6F, 0x20, 0x67, 0x72, 0x61, 0x62, 0x62, 0x61, 0x72, STR_END, ADD_RANDOM, 0x1A };
 	std::vector<unsigned char> buffer = {
 		0x13, 0x37,
 		INT, 0x10, 0x23,
 		BOOL, 0x11, 0x1,
-		STR, 0x12, STR_START, 0x6A, 0x20, 0x72, STR_END,
-		PRT, STR_START, 0x74, 0x6A, 0x6F, 0x20, 0x67, 0x72, 0x61, 0x62, 0x62, 0x61, 0x72, STR_END,
+		STR, 0x12, 0x6A, 0x20, 0x72, 0x00,
+		PRT_STR, 0x74, 0x6A, 0x6F, 0x20, 0x67, 0x72, 0x61, 0x62, 0x62, 0x61, 0x72, 0x00,
 		PRT, 0x10
 	};
 
-
-	// checksum
+	// magic
 	if (buffer[0] != 0x13 || buffer[1] != 0x37)
 		return 0;
 
-	for (size_t i = 2; i < buffer.size(); i++)
+	for (size_t i = 2; i < buffer.size(); )
 	{
 		switch (buffer[i])
 		{
 		case INT:
-			variables.push_back(Variable{ INT, buffer[i + 1], "", buffer[i + 2]});
-			i += 2;
+		{
+			variables.push_back(Variable{ INT, buffer[i + 1], NULL, buffer[i + 2] });
+			i += 3;
 			break;
-		case BOOL:
-			variables.push_back(Variable{ BOOL, buffer[i + 1], "", buffer[i + 2]});
-			i += 2;
-			break;
-		case STR:
+		}
 
-			variables.push_back(Variable{ STR, buffer[i + 1], get_string(i + 2, buffer) }); 
+		case BOOL:
+		{
+			variables.push_back(Variable{ BOOL, buffer[i + 1], NULL, buffer[i + 2] });
+			i += 3;
 			break;
+		}
+
+		case STR:
+		{
+			const char* str = get_string(i + 1, buffer);
+			variables.push_back(Variable{ STR, buffer[i + 1], str });
+			i += strlen(str) + 3;
+			break;
+		}
 
 		case ADD: // ADD INT variable, INT value
 		{
@@ -79,23 +85,22 @@ int main(int argc, char* argv[])
 					break;
 				}
 			}
-			i += 2;
+			i += 3;
 			break;
 		}
 
 		case PRT: // PRT VAR variable
 		{
-			if (buffer[i + 1] == STR_START)
-			{
-				std::string str = get_string(i + 1, buffer);
-				printf("%s\n", str.c_str());
-				i += str.size();
-			}
-			else
-			{
-				printf("%x\n", buffer[i + 1]);
-				i += 2;
-			}
+			printf("%x\n", buffer[i + 1]);
+			i += 3;
+			break;
+		}
+
+		case PRT_STR: // PRT_STR STR string
+		{
+			const char* str = get_string(i, buffer);
+			printf("%s\n", str);
+			i += strlen(str) + 2;
 			break;
 		}
 

@@ -1,21 +1,22 @@
 #pragma once
-#include <string>
+#include <vector>
 
-constexpr int INT = 0x8A;
-constexpr int BOOL = 0x8B;
-constexpr int STR = 0x8C;
-constexpr int STR_START = 0x01;
-constexpr int STR_END = 0x00;
-
-constexpr int ADD = 0x8D;
-constexpr int SUB = 0x8F;
-
-constexpr int PRT = 0x9A;
-constexpr int ADD_RANDOM = 0x9F;
+enum Opcode
+{
+	INT,
+	BOOL,
+	STR,
+	ADD,
+	SUB,
+	AI,
+	PRT,
+	PRT_STR,
+	ADD_RANDOM
+};
 
 struct Variable
 {
-	unsigned char type;
+	Opcode type;
 	unsigned char name;
 	const char* string;
 	unsigned char value;

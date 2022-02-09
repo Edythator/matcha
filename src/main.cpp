@@ -2,12 +2,14 @@
 #include <stdio.h>
 #include <stack>
 
+#define ARR_SIZE(x) sizeof(x)/sizeof(x[0])
+
 int main(int argc, char* argv[])
 {
-	int reg[count]{0};
+	int reg[count] {0};
 
 	std::stack<int> stack;
-	std::vector<int> buffer =
+	int buffer[] =
 	{
 		0x13, 0x37,
 		mov, r0, r1,
@@ -17,20 +19,20 @@ int main(int argc, char* argv[])
 	if (buffer[0] != 0x13 && buffer[1] != 0x37)
 		return 1;
 
-	for (size_t i = 2; i < buffer.size(); i++)
+	for (size_t i = 2; i < ARR_SIZE(buffer); i++)
 	{
 		switch (buffer[i])
 		{
 		case push:
 		{
 			int arg = buffer[i + 1];
-			stack.push(arg_1);
+			stack.push(arg);
 			i += 2;
 		}
 		
 		case pop:
 		{
-			int arg = buffer[i+1]
+			int arg = buffer[i+1];
 			reg[arg] = stack.top();
 			stack.pop();
 			i += 2;

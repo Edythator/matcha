@@ -3,23 +3,25 @@
 
 enum Opcode
 {
-	INT,
-	BOOL,
-	STR,
-	ADD,
-	SUB,
-	AI,
-	PRT,
-	PRT_STR,
-	ADD_RANDOM
+	mov = 1,
+	push,
+	pop,
+	add,
+	sub,
+	inc,
+	dec,
 };
 
-struct Variable
+enum Register
 {
-	Opcode type;
-	unsigned char name;
-	const char* string;
-	unsigned char value;
+	r0,
+	r1,
+	r2,
+	r3,
+	r4,
+	r5,
+	r6,
+	r7,
+	r8, // counter
+	count
 };
-
-const char* get_string(int pos, const std::vector<unsigned char>& buffer);

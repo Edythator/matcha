@@ -9,6 +9,7 @@ enum Opcode
 	sub,
 	inc,
 	dec,
+	exor,
 };
 
 enum Register

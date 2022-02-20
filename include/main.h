@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string.h>
+#include <stdio.h>
+
 enum Opcode
 {
 	mov = 1,

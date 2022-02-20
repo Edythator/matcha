@@ -80,26 +80,3 @@ int main(int argc, char* argv[])
 	}
 	return 0;
 }
-
-/*
-// mov r0, [r1] move the value of r1 to r0
-// mov r1, [r0] move the value of r0 back to r1
-// mov r0, 0 move 0 to r0
-// add r0, 1337 add 1337 to r0
-
-.main
-inc r7
-mov r0, [r7]
-cmp r7, 0x10
-jl outcome1
-
-.outcome1
-
-
-.outcome2
-
-
-.data
-hello HELLO
-constant 239
-*/

@@ -1,4 +1,4 @@
-# vm-test
-my attempt at making a vm
+# matcha
+my attempt at making a vm/language thing
 
-gymnasiearbete, probably
+done as my final project for high school

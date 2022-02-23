@@ -1,7 +1,5 @@
 #pragma once
-
-#include <string.h>
-#include <stdio.h>
+#include <stack>
 
 enum Opcode
 {
@@ -13,6 +11,9 @@ enum Opcode
 	inc,
 	dec,
 	exor,
+    call,
+    cmp,
+    je
 };
 
 enum Register
@@ -28,3 +29,5 @@ enum Register
 	r8, // counter
 	count
 };
+
+void handle_opcode(int* reg, int* buffer, std::stack<int>& stack, size_t& i);

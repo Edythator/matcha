@@ -79,20 +79,21 @@ void handle_opcode(int* reg, char* buffer, std::stack<size_t>& stack, size_t& i)
     }
 }
 
-//TODO: fix string support for labels, tip (size_t)const char* and (const char*)size_t work
+//TODO: fix string support
+// type, length information for variables, idfk anymore
 
 int main(int argc, char* argv[])
 {
 	int reg[count] {0};
 	std::stack<size_t> stack;
 
-	size_t buffer[] =
+	char buffer[] =
 	{
 		0x13, 0x37,
 		mov, r0, r1,
 		add, r1, 0x10,
         cmp, r1, 0x10,
-        je, (size_t)"outcome1"
+        je, 0x9, 'h', 'e', 'y', ' ', 'g', 'u', 'y', 's', '\0'
 	};
 
 	if (buffer[0] != 0x13 && buffer[1] != 0x37)

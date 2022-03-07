@@ -77,7 +77,18 @@ void handle_opcode(int* reg, char* buffer, std::stack<size_t>& stack, size_t& i)
 
         case je:
         {
-
+            int size = 0;
+            for (int j = i; j < size; j++)
+            {
+                if (buffer[j] == '0')
+                {
+                    size = j - i;
+                    break;
+                }
+            }
+            char label[size];
+            memcpy(label, buffer + i, size);
+            //execute label code here
         }
     }
 }

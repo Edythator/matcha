@@ -64,12 +64,15 @@ void handle_opcode(int* reg, char* buffer, std::stack<size_t>& stack, size_t& i)
         case call:
         {
             size_t idx = i + 1;
-            break;
         }
 
         case cmp:
         {
-
+            size_t arg_1 = buffer[i + 1];
+            size_t arg_2 = buffer[i + 2];
+            if (arg_1 == arg_2)
+                handle_opcode(reg, buffer, stack, *(&i+3));
+            i += 3;
         }
 
         case je:
@@ -78,9 +81,6 @@ void handle_opcode(int* reg, char* buffer, std::stack<size_t>& stack, size_t& i)
         }
     }
 }
-
-//TODO: fix string support
-// type, length information for variables, idfk anymore
 
 int main(int argc, char* argv[])
 {
@@ -106,19 +106,28 @@ int main(int argc, char* argv[])
 }
 
 /*
- // pseudocode
- .main
-    print "vad händer"
-    push r0
-    call scanf
-    cmp r0 0
-    je "outcome1"
+ main:
+ push l.str.0
+ call scanf r0
 
-.outcome1
-    push "nej"
-    ret
+ cmp r0 0
+ je l1
 
-.outcome2
-    push "ja"
-    ret
+ cmp r0 1
+ je l2
+
+ cmp r0 2
+ je l3
+
+ l1:
+ print "a"
+
+ l2:
+ print "b"
+
+ l3:
+ print "c"
+
+ l.str.0
+ "%d"
  */

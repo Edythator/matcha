@@ -1,23 +1,27 @@
 #include "../include/main.h"
 #include <stdio.h>
 #include <string.h>
+#include <unordered_map>
+#include <vector>
 
 #define ARR_SIZE(x) sizeof(x)/sizeof(x[0])
 
-void handle_opcode(int* reg, char* buffer, std::stack<size_t>& stack, size_t& i)
+std::unordered_map<const char*, size_t*> labels; // for the love of god don't make this a global
+
+void handle_opcode(size_t* reg, char* buffer, std::stack<size_t>& stack, size_t& i)
 {
     switch (buffer[i])
     {
         case push:
         {
-            size_t arg = buffer[i + 1];
+            char arg = buffer[i + 1];
             stack.push(arg);
             i += 2;
         }
 
         case pop:
         {
-            size_t arg = buffer[i+1];
+            char arg = buffer[i+1];
             reg[arg] = stack.top();
             stack.pop();
             i += 2;
@@ -25,38 +29,38 @@ void handle_opcode(int* reg, char* buffer, std::stack<size_t>& stack, size_t& i)
 
         case mov:
         {
-            size_t arg_1 = buffer[i + 1];
-            size_t arg_2 = buffer[i + 2];
+            char arg_1 = buffer[i + 1];
+            char arg_2 = buffer[i + 2];
             reg[arg_1] = reg[arg_2];
             i += 3;
         }
 
         case add:
         {
-            size_t arg_1 = buffer[i + 1];
-            size_t arg_2 = buffer[i + 2];
+            char arg_1 = buffer[i + 1];
+            char arg_2 = buffer[i + 2];
             reg[arg_1] += arg_2;
             i += 3;
         }
 
         case sub:
         {
-            size_t arg_1 = buffer[i + 1];
-            size_t arg_2 = buffer[i + 2];
+            char arg_1 = buffer[i + 1];
+            char arg_2 = buffer[i + 2];
             reg[arg_1] -= arg_2;
             i += 3;
         }
 
         case inc:
         {
-            size_t arg = buffer[i + 1];
+            char arg = buffer[i + 1];
             reg[arg]++;
             i += 2;
         }
 
         case dec:
         {
-            size_t arg = buffer[i + 1];
+            char arg = buffer[i + 1];
             reg[arg]--;
             i += 2;
         }
@@ -66,19 +70,10 @@ void handle_opcode(int* reg, char* buffer, std::stack<size_t>& stack, size_t& i)
             size_t idx = i + 1;
         }
 
-        case cmp:
-        {
-            size_t arg_1 = buffer[i + 1];
-            size_t arg_2 = buffer[i + 2];
-            if (arg_1 == arg_2)
-                handle_opcode(reg, buffer, stack, *(&i+3));
-            i += 3;
-        }
-
         case je:
         {
-            int size = 0;
-            for (int j = i; j < size; j++)
+            size_t size = 0;
+            for (size_t j = i; j < size; j++)
             {
                 if (buffer[j] == '0')
                 {
@@ -88,15 +83,29 @@ void handle_opcode(int* reg, char* buffer, std::stack<size_t>& stack, size_t& i)
             }
             char label[size];
             memcpy(label, buffer + i, size);
-            //execute label code here
+
+            for (size_t j = 0; j < size; i++)
+                handle_opcode(reg, (char*)labels[label], stack, j);
+        }
+
+        case cmp:
+        {
+            // wtf is this?
+            //TODO: fix so it's proper
+            char arg_1 = buffer[i + 1];
+            char arg_2 = buffer[i + 2];
+            if (arg_1 == arg_2)
+                handle_opcode(reg, buffer, stack, *(&i+3));
+            i += 3;
         }
     }
 }
 
 int main(int argc, char* argv[])
 {
-	int reg[count] {0};
+	size_t reg[count] {0};
 	std::stack<size_t> stack;
+    std::vector<size_t*> strings;
 
 	char buffer[] =
 	{
@@ -104,12 +113,54 @@ int main(int argc, char* argv[])
 		mov, r0, r1,
 		add, r1, 0x10,
         cmp, r1, 0x10,
-        je, 0x9, 'h', 'e', 'y', ' ', 'g', 'u', 'y', 's', '\0'
+        je,'h', 'e', 'y', ' ', 'g', 'u', 'y', 's', '\0'
 	};
 
 	if (buffer[0] != 0x13 && buffer[1] != 0x37)
 		return 1;
 
+    // parse labels
+    for (size_t i = 2; i < ARR_SIZE(buffer); i++)
+    {
+        if (buffer[i] != ':')
+            continue;
+
+        if (buffer[i+1] == 's' && buffer[i+2] == 't' && buffer[i+3] == 'r')
+        {
+            size_t size = i;
+            i += 5; // s + t + r + \n + \0
+            for (; i < ARR_SIZE(buffer); i++)
+            {
+                if (buffer[i] == '\0')
+                    break;
+            }
+
+            size_t* variable = (size_t*)malloc(i - size + 1);
+            memcpy(variable, buffer + size, i - size);
+            strings.push_back(variable);
+            continue;
+        }
+
+        const char* label_name = buffer + i;
+        size_t label_size = 0;
+
+        for (size_t j = i; j < ARR_SIZE(buffer); j++)
+        {
+            if (buffer[j] == 'r' && buffer[j+1] == 'e' && buffer[j+2] == 't')
+            {
+                label_size = j + 2;
+                break;
+            }
+        }
+
+        size_t* label_content = (size_t*)malloc(label_size + 1);
+        memcpy(label_content, buffer + i, label_size);
+        labels[label_name] = label_content;
+
+        i += label_size;
+    }
+
+    // handle code
 	for (size_t i = 2; i < ARR_SIZE(buffer); i++)
         handle_opcode(reg, buffer, stack, i);
 
@@ -117,8 +168,8 @@ int main(int argc, char* argv[])
 }
 
 /*
- main:
- push l.str.0
+ :main
+ push str.0
  call scanf r0
 
  cmp r0 0
@@ -130,15 +181,30 @@ int main(int argc, char* argv[])
  cmp r0 2
  je l3
 
- l1:
- print "a"
+ :l1
+ push str.1
+ call printf "a"
+ ret
 
- l2:
- print "b"
+ :l2
+ push str.2
+ call printf "b"
+ ret
 
- l3:
- print "c"
+ :l3
+ push l.str.3
+ call printf "c"
+ ret
 
- l.str.0
+ :str.0
  "%d"
+
+ :str.1
+ "a"
+
+ :str.2
+ "b"
+
+ :str.3
+ "c"
  */

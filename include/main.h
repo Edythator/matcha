@@ -13,7 +13,8 @@ enum Opcode
 	exor,
     call,
     cmp,
-    je
+    je,
+    ret
 };
 
 enum Register

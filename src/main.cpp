@@ -75,28 +75,28 @@ void handle_opcode(size_t* reg, char* buffer, std::stack<size_t>& stack, size_t&
             size_t size = 0;
             for (size_t j = i; j < size; j++)
             {
-                if (buffer[j] == '0')
+                if (buffer[j] == '\0')
                 {
                     size = j - i;
                     break;
                 }
             }
-            char label[size];
-            memcpy(label, buffer + i, size);
+            const char* label_name = buffer + i;
 
+            printf("%s", label_name);
             for (size_t j = 0; j < size; i++)
-                handle_opcode(reg, (char*)labels[label], stack, j);
+                handle_opcode(reg, (char*)labels[label_name], stack, j);
         }
 
         case cmp:
         {
             // wtf is this?
             //TODO: fix so it's proper
-            char arg_1 = buffer[i + 1];
+            /*char arg_1 = buffer[i + 1];
             char arg_2 = buffer[i + 2];
             if (arg_1 == arg_2)
                 handle_opcode(reg, buffer, stack, *(&i+3));
-            i += 3;
+            i += 3;*/
         }
     }
 }
@@ -112,8 +112,11 @@ int main(int argc, char* argv[])
 		0x13, 0x37,
 		mov, r0, r1,
 		add, r1, 0x10,
-        cmp, r1, 0x10,
-        je,'h', 'e', 'y', ' ', 'g', 'u', 'y', 's', '\0'
+        je,'l','1', '\0',
+
+        ':', 'l', '1', '\0',
+        add, r1, 0x10,
+        ret
 	};
 
 	if (buffer[0] != 0x13 && buffer[1] != 0x37)
@@ -146,9 +149,9 @@ int main(int argc, char* argv[])
 
         for (size_t j = i; j < ARR_SIZE(buffer); j++)
         {
-            if (buffer[j] == 'r' && buffer[j+1] == 'e' && buffer[j+2] == 't')
+            if (buffer[j] == ret)
             {
-                label_size = j + 2;
+                label_size = j;
                 break;
             }
         }

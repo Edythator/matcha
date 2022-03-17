@@ -1,12 +1,13 @@
 #include "../include/main.h"
 #include <stdio.h>
 #include <string.h>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
 #define ARR_SIZE(x) sizeof(x)/sizeof(x[0])
 
-std::unordered_map<const char*, size_t*> labels; // for the love of god don't make this a global
+std::unordered_map<std::string, char*> labels; // for the love of god don't make this a global also please don't use std::string
 
 void handle_opcode(size_t* reg, const char* buffer, std::stack<size_t>& stack, size_t& i)
 {
@@ -72,19 +73,11 @@ void handle_opcode(size_t* reg, const char* buffer, std::stack<size_t>& stack, s
 
         case je:
         {
-            size_t size = 0;
-            for (size_t j = i; j < size; j++)
-            {
-                if (buffer[j] == '\0')
-                {
-                    size = j - i;
-                    break;
-                }
-            }
-            const char* label_name = buffer + i;
+            const char* label_name = buffer + i + 1;
+            char& label = *labels[label_name];
 
-            for (size_t j = 0; j < size; i++)
-                handle_opcode(reg, (char*)labels[label_name], stack, j);
+            for (size_t j = 0; j < 30; j++)
+              handle_opcode(reg, &label, stack, j); //TODO: fix recursion crash
         }
 
         case cmp:
@@ -104,7 +97,7 @@ int main(int argc, char* argv[])
 {
 	size_t reg[count] {0};
 	std::stack<size_t> stack;
-    std::vector<size_t*> strings;
+    std::vector<const char*> strings;
 
 	char buffer[] =
 	{
@@ -115,38 +108,38 @@ int main(int argc, char* argv[])
 
         ':', 'l', '1', '\0',
         add, r1, 0x10,
+        add, r2, 0x20,
+        add, r3, 0x30,
         ret
 	};
+    constexpr size_t buffer_size = ARR_SIZE(buffer);
 
 	if (buffer[0] != 0x13 && buffer[1] != 0x37)
 		return 1;
 
     // parse labels
-    for (size_t i = 2; i < ARR_SIZE(buffer); i++)
+    for (size_t i = 2; i < buffer_size; i++)
     {
         if (buffer[i] != ':')
             continue;
 
         if (buffer[i+1] == 's' && buffer[i+2] == 't' && buffer[i+3] == 'r')
         {
-            size_t size = i;
-            i += 5; // s + t + r + \n + \0
-            for (; i < ARR_SIZE(buffer); i++)
-            {
-                if (buffer[i] == '\0')
-                    break;
-            }
+            i += 5; // s + t + r + n + \0
 
-            size_t* variable = (size_t*)malloc(i - size + 1);
-            memcpy(variable, buffer + size, i - size);
-            strings.push_back(variable);
+            const char* string = buffer + i;
+            char* shit = (char*)malloc(strlen(string));
+            strcpy(shit, string);
+
+            strings.push_back(shit);
             continue;
         }
 
         const char* label_name = buffer + i + 1;
-        size_t label_size = 0;
+        i += strlen(label_name) + 1;
 
-        for (size_t j = i; j < ARR_SIZE(buffer); j++)
+        size_t label_size = 0;
+        for (size_t j = i; j < buffer_size; j++)
         {
             if (buffer[j] == ret)
             {
@@ -155,18 +148,15 @@ int main(int argc, char* argv[])
             }
         }
 
-        size_t* label_content = (size_t*)malloc(label_size + 1);
-        memcpy(label_content, buffer + i + strlen(label_name), label_size);
+        char* label_content = (char*)malloc(label_size + 1);
+        memcpy(label_content, buffer + i + 1, label_size);
         labels[label_name] = label_content;
-
-        printf("0x%x ", (char*)labels[label_name]);
-        // 0x4 0x0 0x10 0x11
 
         i += label_size;
     }
 
     // handle code
-	for (size_t i = 2; i < ARR_SIZE(buffer); i++)
+	for (size_t i = 2; i < buffer_size; i++)
         handle_opcode(reg, buffer, stack, i);
 
 	return 0;
@@ -188,7 +178,6 @@ int main(int argc, char* argv[])
 
  :l1
  push str.1
- push r0
  call printf r0
  ret
 

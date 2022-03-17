@@ -8,7 +8,7 @@
 
 std::unordered_map<const char*, size_t*> labels; // for the love of god don't make this a global
 
-void handle_opcode(size_t* reg, char* buffer, std::stack<size_t>& stack, size_t& i)
+void handle_opcode(size_t* reg, const char* buffer, std::stack<size_t>& stack, size_t& i)
 {
     switch (buffer[i])
     {
@@ -83,7 +83,6 @@ void handle_opcode(size_t* reg, char* buffer, std::stack<size_t>& stack, size_t&
             }
             const char* label_name = buffer + i;
 
-            printf("%s", label_name);
             for (size_t j = 0; j < size; i++)
                 handle_opcode(reg, (char*)labels[label_name], stack, j);
         }
@@ -144,7 +143,7 @@ int main(int argc, char* argv[])
             continue;
         }
 
-        const char* label_name = buffer + i;
+        const char* label_name = buffer + i + 1;
         size_t label_size = 0;
 
         for (size_t j = i; j < ARR_SIZE(buffer); j++)
@@ -157,8 +156,11 @@ int main(int argc, char* argv[])
         }
 
         size_t* label_content = (size_t*)malloc(label_size + 1);
-        memcpy(label_content, buffer + i, label_size);
+        memcpy(label_content, buffer + i + strlen(label_name), label_size);
         labels[label_name] = label_content;
+
+        printf("0x%x ", (char*)labels[label_name]);
+        // 0x4 0x0 0x10 0x11
 
         i += label_size;
     }
@@ -186,17 +188,20 @@ int main(int argc, char* argv[])
 
  :l1
  push str.1
- call printf "a"
+ push r0
+ call printf r0
  ret
 
  :l2
  push str.2
- call printf "b"
+ pop r0
+ call printf r0
  ret
 
  :l3
  push l.str.3
- call printf "c"
+ pop r0
+ call printf r0
  ret
 
  :str.0

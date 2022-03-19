@@ -10,25 +10,46 @@ enum Opcode
 	sub,
 	inc,
 	dec,
-	exor,
     call,
     cmp,
     je,
-    ret
+    ret,
+    endp
 };
 
-enum Register
+enum
 {
-	r0,
-	r1,
-	r2,
-	r3,
-	r4,
-	r5,
-	r6,
-	r7,
-	r8, // counter
-	count
+    R0,
+    R1,
+    R2,
+    R3,
+    R4,
+    R5,
+    R6,
+    R7,
+    RC,
+    RI,
+    RB,
+    REGISTER_COUNT
 };
 
-void handle_opcode(int* reg, int* buffer, std::stack<int>& stack, size_t& i);
+union Register
+{
+    struct
+    {
+        size_t r0;
+        size_t r1;
+        size_t r2;
+        size_t r3;
+        size_t r4;
+        size_t r5;
+        size_t r6;
+        size_t r7;
+        size_t rc;
+        size_t ri;
+        size_t rb;
+    };
+    size_t reg[REGISTER_COUNT];
+};
+
+void handle_opcode(Register* reg, const char* buffer, std::stack<size_t>& stack);

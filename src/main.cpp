@@ -121,18 +121,17 @@ int main(int argc, char* argv[])
 
 	char buffer[] =
 	{
-		0x13, 0x37,
-        add, R0, 0x40,
-		mov, R1, R0,
-		add, R1, 0x10,
-        je,'l','1', '\0',
-        endp,
+            0x13, 0x37,
+            add, R0, 0x40,
+            mov, R1, R0,add, R1, 0x10,
+            je,'l','1', '\0',
+            endp,
 
-        ':', 'l', '1', '\0',
-        add, R2, 0x10,
-        add, R3, 0x20,
-        add, R4, 0x30,
-        ret
+            ':', 'l', '1', '\0',
+            add, R2, 0x10,
+            add, R3, 0x20,
+            add, R4, 0x30,
+            ret
 	};
     size_t buffer_size = ARR_SIZE(buffer);
 

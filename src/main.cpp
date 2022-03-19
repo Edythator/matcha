@@ -115,8 +115,8 @@ void handle_opcode(Register* reg, const char* buffer, std::stack<size_t>& stack)
 
 int main(int argc, char* argv[])
 {
-	Register registers{};
-	std::stack<size_t> stack;
+    Register registers{};
+    std::stack<size_t> stack;
     std::vector<const char*> strings;
 
 	char buffer[] =
@@ -136,8 +136,8 @@ int main(int argc, char* argv[])
 	};
     size_t buffer_size = ARR_SIZE(buffer);
 
-	if (buffer[0] != 0x13 && buffer[1] != 0x37)
-		return 1;
+    if (buffer[0] != 0x13 && buffer[1] != 0x37)
+        return 1;
     registers.ri = 2;
 
     // parse labels
@@ -178,7 +178,7 @@ int main(int argc, char* argv[])
     while (buffer_offset < buffer_size || buffer_offset != -1)
         handle_opcode(&registers, buffer, stack);
 
-	return 0;
+    return 0;
 }
 
 /*

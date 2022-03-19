@@ -3,13 +3,13 @@
 
 enum Opcode
 {
-	mov = 1,
-	push,
-	pop,
-	add,
-	sub,
-	inc,
-	dec,
+    mov = 1,
+    push,
+    pop,
+    add,
+    sub,
+    inc,
+    dec,
     call,
     cmp,
     je,

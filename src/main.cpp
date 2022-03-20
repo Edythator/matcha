@@ -1,13 +1,13 @@
 #include "../include/main.h"
 #include <stdio.h>
 #include <string.h>
-#include <string>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 
 #define ARR_SIZE(x) sizeof(x)/sizeof(x[0])
 
-std::unordered_map<std::string, size_t> labels; // for the love of god don't make this a global also please don't use std::string
+std::unordered_map<std::string_view, size_t> labels; // for the love of god don't make this a global also please don't use std::string
 
 void handle_opcode(Register* reg, const char* buffer, std::stack<size_t>& stack)
 {
@@ -85,7 +85,7 @@ void handle_opcode(Register* reg, const char* buffer, std::stack<size_t>& stack)
             break;
         }
 
-        case je:
+        case jmp:
         {
             const char* label_name = buffer + reg->ri + 1;
             size_t label_pos = labels.at(label_name);
@@ -119,12 +119,12 @@ int main(int argc, char* argv[])
     std::stack<size_t> stack;
     std::vector<const char*> strings;
 
-	char buffer[] =
-	{
+    char buffer[] =
+    {
             0x13, 0x37,
             add, R0, 0x40,
             mov, R1, R0,add, R1, 0x10,
-            je,'l','1', '\0',
+            jmp,'l','1', '\0',
             endp,
 
             ':', 'l', '1', '\0',
@@ -132,7 +132,7 @@ int main(int argc, char* argv[])
             add, R3, 0x20,
             add, R4, 0x30,
             ret
-	};
+    };
     size_t buffer_size = ARR_SIZE(buffer);
 
     if (buffer[0] != 0x13 && buffer[1] != 0x37)

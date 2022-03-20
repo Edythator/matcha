@@ -12,7 +12,7 @@ enum Opcode
     dec,
     call,
     cmp,
-    je,
+    jmp,
     ret,
     endp
 };

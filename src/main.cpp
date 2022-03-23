@@ -5,8 +5,6 @@
 #include <string_view>
 #include <vector>
 
-#define ARR_SIZE(x) sizeof(x)/sizeof(x[0])
-
 std::unordered_map<std::string_view, size_t> labels;
 std::vector<const char*> strings;
 
@@ -86,9 +84,9 @@ void handle_opcode(Register* reg, const char* buffer, std::stack<size_t>& stack)
             if (strcmp(function, "print") == 0)
                 printf(strings.at(string_pos));
             else if (strcmp(function, "printf") == 0)
-                printf(strings.at(string_pos), reg->reg[in]);
+                printf(strings.at(string_pos - 1), reg->reg[in]);
             else if (strcmp(function, "scanf") == 0)
-                scanf(strings.at(string_pos), reg->reg[in]);
+                scanf(strings.at(string_pos - 1), reg->reg[in]);
 
             break;
         }
@@ -147,35 +145,27 @@ int main(int argc, char* argv[])
     Register registers{};
     std::stack<size_t> stack;
 
-    char buffer[] =
-    {
-            0x13, 0x37,
-            add, R0, 0x40,
-            mov, R1, R0,
-            add, R1, 0x10,
-            jmp,'l','1', '\0',
-            endp,
+    FILE* file = fopen("main.cha", "rb");
+    if (!file)
+        return -1;
+    fseek(file, 0, SEEK_END);
+    size_t file_size = ftell(file);
+    fseek(file, 0, SEEK_SET);
 
-            ':', 'l', '1', '\0',
-            add, R2, 0x10,
-            add, R3, 0x20,
-            add, R4, 0x30,
-            call, 'p','r','i','n','t', 'f','\0', 0x1, R2,
-            ret,
+    char* buffer = (char*)malloc(file_size + 1);
+    if (!buffer)
+        return -1;
 
-            ':', 's','t','r','0','\0',
-            '0','x','%', 'd','\0',
-            ':', 's','t','r','1','\0',
-            '%','d','\0'
-    };
-    size_t buffer_size = ARR_SIZE(buffer);
+    fread(buffer, file_size, 1, file);
+    fclose(file);
+    buffer[file_size] = 0;
 
     if (buffer[0] != 0x13 && buffer[1] != 0x37)
         return 1;
     registers.ri = 2;
 
     // parse labels
-    for (size_t i = 2; i < buffer_size; i++)
+    for (size_t i = 2; i < file_size; i++)
     {
         if (buffer[i] != ':')
             continue;
@@ -199,7 +189,7 @@ int main(int argc, char* argv[])
 
         labels.emplace(label_name, i);
 
-        for (size_t j = i; j < buffer_size; j++)
+        for (size_t j = i; j < file_size; j++)
         {
             if (buffer[j] == ret)
             {
@@ -211,52 +201,8 @@ int main(int argc, char* argv[])
 
     // handle code
     size_t& buffer_offset = registers.ri;
-    while (buffer_offset < buffer_size || buffer_offset != -1)
+    while (buffer_offset < file_size || buffer_offset != -1)
         handle_opcode(&registers, buffer, stack);
 
     return 0;
 }
-
-/*
- :main
- push str.0
- call scanf r0
-
- cmp r0 0
- je l1
-
- cmp r0 1
- je l2
-
- cmp r0 2
- je l3
-
- :l1
- push str.1
- call printf r0
- ret
-
- :l2
- push str.2
- pop r0
- call printf r0
- ret
-
- :l3
- push l.str.3
- pop r0
- call printf r0
- ret
-
- :str.0
- "%d"
-
- :str.1
- "a"
-
- :str.2
- "b"
-
- :str.3
- "c"
- */

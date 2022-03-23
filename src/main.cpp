@@ -1,15 +1,11 @@
 #include "../include/main.h"
 #include <stdio.h>
 #include <string.h>
-#include <string_view>
-#include <unordered_map>
 #include <vector>
 
 #define ARR_SIZE(x) sizeof(x)/sizeof(x[0])
 
-std::unordered_map<std::string_view, size_t> labels; // for the love of god don't make this a global also please don't use std::string
-
-void handle_opcode(Register* reg, const char* buffer, std::stack<size_t>& stack)
+void handle_opcode(Register* reg, const char* buffer, std::stack<size_t>& stack, const std::unordered_map<std::string_view, size_t>& labels)
 {
     switch (buffer[reg->ri])
     {
@@ -95,15 +91,29 @@ void handle_opcode(Register* reg, const char* buffer, std::stack<size_t>& stack)
             break;
         }
 
+        case jnz:
+        {
+            size_t result = stack.top();
+            stack.pop();
+            if (!result)
+                break;
+
+            const char* label_name = buffer + reg->ri + 1;
+            size_t label_pos = labels.at(label_name);
+
+            reg->rb = reg->ri;
+            reg->ri = label_pos + 1;
+            break;
+        }
+
         case cmp:
         {
-            // wtf is this?
-            //TODO: fix so it's proper
-            /*char arg_1 = buffer[i + 1];
-            char arg_2 = buffer[i + 2];
-            if (arg_1 == arg_2)
-                handle_opcode(reg, buffer, stack, *(&i+3));
-            i += 3;*/
+            char arg_1 = buffer[reg->ri + 1];
+            char arg_2 = buffer[reg->ri + 2];
+            if (reg->reg[arg_1] == arg_2)
+                stack.push(true);
+            else stack.push(false);
+            reg->ri += 3;
         }
 
         case endp:
@@ -117,6 +127,7 @@ int main(int argc, char* argv[])
 {
     Register registers{};
     std::stack<size_t> stack;
+    std::unordered_map<std::string_view, size_t> labels;
     std::vector<const char*> strings;
 
     char buffer[] =
@@ -175,7 +186,7 @@ int main(int argc, char* argv[])
     // handle code
     size_t& buffer_offset = registers.ri;
     while (buffer_offset < buffer_size || buffer_offset != -1)
-        handle_opcode(&registers, buffer, stack);
+        handle_opcode(&registers, buffer, stack, labels);
 
     return 0;
 }

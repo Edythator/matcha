@@ -1,5 +1,7 @@
 #pragma once
 #include <stack>
+#include <unordered_map>
+#include <string_view>
 
 enum Opcode
 {
@@ -13,6 +15,7 @@ enum Opcode
     call,
     cmp,
     jmp,
+    jnz,
     ret,
     endp
 };
@@ -45,11 +48,11 @@ union Register
         size_t r5;
         size_t r6;
         size_t r7;
+        size_t rb;
         size_t rc;
         size_t ri;
-        size_t rb;
     };
     size_t reg[REGISTER_COUNT];
 };
 
-void handle_opcode(Register* reg, const char* buffer, std::stack<size_t>& stack);
+void handle_opcode(Register* reg, const char* buffer, std::stack<size_t>& stack, const std::unordered_map<std::string_view, size_t>& labels);

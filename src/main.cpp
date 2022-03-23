@@ -1,10 +1,16 @@
 #include "../include/main.h"
 #include <stdio.h>
 #include <string.h>
+#include <unordered_map>
+#include <string_view>
+#include <vector>
 
 #define ARR_SIZE(x) sizeof(x)/sizeof(x[0])
 
-void handle_opcode(Register* reg, const char* buffer, std::stack<size_t>& stack, const std::unordered_map<std::string_view, size_t>& labels, const std::vector<const char*>& strings)
+std::unordered_map<std::string_view, size_t> labels;
+std::vector<const char*> strings;
+
+void handle_opcode(Register* reg, const char* buffer, std::stack<size_t>& stack)
 {
     switch (buffer[reg->ri])
     {
@@ -70,26 +76,26 @@ void handle_opcode(Register* reg, const char* buffer, std::stack<size_t>& stack,
 
         case call:
         {
-            // call 0x1 printf r0
-            char string_pos = buffer[reg->ri + 1];
-            const char* function = buffer + reg->ri + 2;
-            reg->ri += strlen(function) + 1;
-            char in = buffer[reg->ri];
-            reg->ri++;
+            const char* function = buffer + reg->ri + 1;
+            size_t function_len = strlen(function) + 1;
+            char string_pos = buffer[reg->ri + 1 + function_len];
 
-            // TODO: come up with a way to reference registers
-            if (strcmp(function, "printf") != 0)
+            reg->ri += function_len + 1; // call + func + string_pos
+            char in = buffer[reg->ri + 1];
+
+            if (strcmp(function, "print") == 0)
                 printf(strings.at(string_pos));
-            else if (strcmp(function, "scanf") != 0)
-                scanf(strings.at(string_pos), in);
+            else if (strcmp(function, "printf") == 0)
+                printf(strings.at(string_pos), reg->reg[in]);
+            else if (strcmp(function, "scanf") == 0)
+                scanf(strings.at(string_pos), reg->reg[in]);
 
             break;
         }
 
         case ret:
         {
-            // TODO: fix proper returning from jumps
-            reg->ri = reg->rb + 4; // for label name
+            reg->ri = reg->rb;
             reg->rb = 0;
             break;
         }
@@ -99,7 +105,7 @@ void handle_opcode(Register* reg, const char* buffer, std::stack<size_t>& stack,
             const char* label_name = buffer + reg->ri + 1;
             size_t label_pos = labels.at(label_name);
 
-            reg->rb = reg->ri;
+            reg->rb = reg->ri + strlen(label_name) + 2;
             reg->ri = label_pos + 1;
             break;
         }
@@ -114,7 +120,7 @@ void handle_opcode(Register* reg, const char* buffer, std::stack<size_t>& stack,
             const char* label_name = buffer + reg->ri + 1;
             size_t label_pos = labels.at(label_name);
 
-            reg->rb = reg->ri;
+            reg->rb = reg->ri + strlen(label_name) + 2;
             reg->ri = label_pos + 1;
             break;
         }
@@ -140,14 +146,13 @@ int main(int argc, char* argv[])
 {
     Register registers{};
     std::stack<size_t> stack;
-    std::unordered_map<std::string_view, size_t> labels;
-    std::vector<const char*> strings;
 
     char buffer[] =
     {
             0x13, 0x37,
             add, R0, 0x40,
-            mov, R1, R0,add, R1, 0x10,
+            mov, R1, R0,
+            add, R1, 0x10,
             jmp,'l','1', '\0',
             endp,
 
@@ -155,7 +160,13 @@ int main(int argc, char* argv[])
             add, R2, 0x10,
             add, R3, 0x20,
             add, R4, 0x30,
-            ret
+            call, 'p','r','i','n','t', 'f','\0', 0x1, R2,
+            ret,
+
+            ':', 's','t','r','0','\0',
+            '0','x','%', 'd','\0',
+            ':', 's','t','r','1','\0',
+            '%','d','\0'
     };
     size_t buffer_size = ARR_SIZE(buffer);
 
@@ -171,13 +182,15 @@ int main(int argc, char* argv[])
 
         if (buffer[i+1] == 's' && buffer[i+2] == 't' && buffer[i+3] == 'r')
         {
-            i += 5; // s + t + r + n + \0
+            i += 6; // s + t + r + n + \0
 
             const char* string = buffer + i;
-            char* shit = (char*)malloc(strlen(string));
+            size_t string_len = strlen(string);
+            char* shit = (char*)malloc(string_len);
             strcpy(shit, string);
 
-            strings.push_back(shit);
+            strings.emplace_back(shit);
+            i += string_len;
             continue;
         }
 
@@ -190,7 +203,7 @@ int main(int argc, char* argv[])
         {
             if (buffer[j] == ret)
             {
-                i += j;
+                i = j;
                 break;
             }
         }
@@ -199,7 +212,7 @@ int main(int argc, char* argv[])
     // handle code
     size_t& buffer_offset = registers.ri;
     while (buffer_offset < buffer_size || buffer_offset != -1)
-        handle_opcode(&registers, buffer, stack, labels, strings);
+        handle_opcode(&registers, buffer, stack);
 
     return 0;
 }

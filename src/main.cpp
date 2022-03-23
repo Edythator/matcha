@@ -1,11 +1,10 @@
 #include "../include/main.h"
 #include <stdio.h>
 #include <string.h>
-#include <vector>
 
 #define ARR_SIZE(x) sizeof(x)/sizeof(x[0])
 
-void handle_opcode(Register* reg, const char* buffer, std::stack<size_t>& stack, const std::unordered_map<std::string_view, size_t>& labels)
+void handle_opcode(Register* reg, const char* buffer, std::stack<size_t>& stack, const std::unordered_map<std::string_view, size_t>& labels, const std::vector<const char*>& strings)
 {
     switch (buffer[reg->ri])
     {
@@ -71,11 +70,25 @@ void handle_opcode(Register* reg, const char* buffer, std::stack<size_t>& stack,
 
         case call:
         {
-            size_t idx = reg->ri + 1;
+            // call 0x1 printf r0
+            char string_pos = buffer[reg->ri + 1];
+            const char* function = buffer + reg->ri + 2;
+            reg->ri += strlen(function) + 1;
+            char in = buffer[reg->ri];
+            reg->ri++;
+
+            // TODO: come up with a way to reference registers
+            if (strcmp(function, "printf") != 0)
+                printf(strings.at(string_pos));
+            else if (strcmp(function, "scanf") != 0)
+                scanf(strings.at(string_pos), in);
+
+            break;
         }
 
         case ret:
         {
+            // TODO: fix proper returning from jumps
             reg->ri = reg->rb + 4; // for label name
             reg->rb = 0;
             break;
@@ -186,7 +199,7 @@ int main(int argc, char* argv[])
     // handle code
     size_t& buffer_offset = registers.ri;
     while (buffer_offset < buffer_size || buffer_offset != -1)
-        handle_opcode(&registers, buffer, stack, labels);
+        handle_opcode(&registers, buffer, stack, labels, strings);
 
     return 0;
 }

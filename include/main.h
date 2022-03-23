@@ -2,6 +2,7 @@
 #include <stack>
 #include <unordered_map>
 #include <string_view>
+#include <vector>
 
 enum Opcode
 {
@@ -55,4 +56,4 @@ union Register
     size_t reg[REGISTER_COUNT];
 };
 
-void handle_opcode(Register* reg, const char* buffer, std::stack<size_t>& stack, const std::unordered_map<std::string_view, size_t>& labels);
+void handle_opcode(Register* reg, const char* buffer, std::stack<size_t>& stack, const std::unordered_map<std::string_view, size_t>& labels, const std::vector<const char*>& strings);

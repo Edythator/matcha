@@ -157,7 +157,13 @@ int main(int argc, char* argv[])
     Register registers{};
     std::stack<size_t> stack;
 
-    FILE* file = fopen("main.cha", "rb");
+    if (argc != 2)
+    {
+        printf("Usage -- ./matcha program.cha\n");
+        return 1;
+    }
+
+    FILE* file = fopen(argv[1], "rb");
     if (!file)
         return -1;
     fseek(file, 0, SEEK_END);

@@ -80,21 +80,22 @@ void handle_opcode(Register* reg, const char* buffer, std::stack<size_t>& stack)
             char string_pos = buffer[reg->ri + 1 + function_len];
 
             reg->ri += function_len + 2; // call + func + string_pos
-            char in = buffer[reg->ri];
 
             if (strcmp(function, "print") == 0)
                 printf("%s", strings.at(string_pos));
             else if (strcmp(function, "printf") == 0)
             {
                 skip = true;
+                char in = buffer[reg->ri];
                 printf(strings.at(string_pos), reg->reg[in]);
             }
+
             else if (strcmp(function, "scanf") == 0)
             {
                 skip = true;
+                char in = buffer[reg->ri];
                 scanf(strings.at(string_pos), &reg->reg[in]);
             }
-
             if (skip)
                 reg->ri++;
             break;
@@ -140,11 +141,13 @@ void handle_opcode(Register* reg, const char* buffer, std::stack<size_t>& stack)
                 stack.push(true);
             else stack.push(false);
             reg->ri += 3;
+            break;
         }
 
         case endp:
         {
             reg->ri = -1;
+            break;
         }
     }
 }

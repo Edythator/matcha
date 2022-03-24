@@ -78,8 +78,8 @@ void handle_opcode(Register* reg, const char* buffer, std::stack<size_t>& stack)
             size_t function_len = strlen(function) + 1;
             char string_pos = buffer[reg->ri + 1 + function_len];
 
-            reg->ri += function_len + 1; // call + func + string_pos
-            char in = buffer[reg->ri + 1];
+            reg->ri += function_len + 2; // call + func + string_pos
+            char in = buffer[reg->ri];
 
             if (strcmp(function, "print") == 0)
                 printf(strings.at(string_pos));

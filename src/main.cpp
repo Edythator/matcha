@@ -122,10 +122,13 @@ void handle_opcode(Register* reg, const char* buffer, std::stack<size_t>& stack)
         {
             size_t result = stack.top();
             stack.pop();
-            if (!result)
-                break;
 
             const char* label_name = buffer + reg->ri + 1;
+            if (!result)
+            {
+                reg->ri += strlen(label_name) + 2;
+                break;
+            }
             size_t label_pos = labels.at(label_name);
 
             reg->rb = reg->ri + strlen(label_name) + 2;
@@ -194,10 +197,10 @@ int main(int argc, char* argv[])
 
             const char* string = buffer + i;
             size_t string_len = strlen(string);
-            char* shit = (char*)malloc(string_len);
-            strcpy(shit, string);
+            char* actual_string = (char*)malloc(string_len);
+            strcpy(actual_string, string);
 
-            strings.emplace_back(shit);
+            strings.emplace_back(actual_string);
             i += string_len;
             continue;
         }
